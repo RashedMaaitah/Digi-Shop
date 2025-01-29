@@ -22,6 +22,8 @@ import java.time.Instant;
 @Table(name = "cart_items")
 public class CartItems {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
     @Column(name = "cart_item_id", nullable = false)
     private Long id;
 

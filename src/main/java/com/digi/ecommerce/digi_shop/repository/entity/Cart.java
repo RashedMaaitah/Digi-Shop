@@ -23,6 +23,7 @@ import java.time.Instant;
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
     @Column(name = "cart_id", nullable = false)
     private Long id;
 
