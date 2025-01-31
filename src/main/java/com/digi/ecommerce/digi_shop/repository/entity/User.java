@@ -67,4 +67,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<>();
 
+    @Column(unique = true, name = "refresh_token")
+    private String refreshToken;
+
+    @Column(name = "refresh_token_exp")
+    private Instant refreshTokenExpiry;
+
 }
