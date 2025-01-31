@@ -30,8 +30,8 @@ public class SwaggerConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
                 .info(new Info()
-                        .title("REST API for Flight Advisor Service.")
-//                        .version(this.appVersion)
+                        .title("REST API for Digi Shop.")
+                        .version(this.appVersion)
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://springdoc.org")));
