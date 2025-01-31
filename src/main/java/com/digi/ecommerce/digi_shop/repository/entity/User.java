@@ -7,11 +7,13 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class represents the User domain model as a JPA Entity
  *
- * @author  Rashed Al Maaitah
+ * @author Rashed Al Maaitah
  * @version 1.0
  */
 @Entity
@@ -19,7 +21,6 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-@RequiredArgsConstructor
 @ToString
 public class User {
 
@@ -28,13 +29,6 @@ public class User {
     @Basic(optional = false)
     @Column(name = "user_id", nullable = false)
     private Long id;
-
-
-    @Size(max = 50)
-    @NotNull
-    @Basic(optional = false)
-    @Column(name = "username", nullable = false, length = 50)
-    private String username;
 
     @Size(max = 255)
     @NotNull
@@ -69,5 +63,8 @@ public class User {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<Role> roles = new HashSet<>();
 
 }
