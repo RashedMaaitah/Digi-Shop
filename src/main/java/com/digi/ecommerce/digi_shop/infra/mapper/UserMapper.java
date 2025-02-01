@@ -15,7 +15,7 @@ import java.util.Set;
 public abstract class UserMapper {
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    protected PasswordEncoder passwordEncoder;
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "email", source = "username")
