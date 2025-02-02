@@ -1,5 +1,6 @@
 package com.digi.ecommerce.digi_shop.infra.security;
 
+import com.digi.ecommerce.digi_shop.common.Roles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -69,7 +70,15 @@ public class SecurityConfig {
                                 mather
                                         .requestMatchers(authWhitelist)
                                         .permitAll()
-                                        .anyRequest().authenticated()
+                )
+                .authorizeHttpRequests(
+                        matcher ->
+                                matcher.requestMatchers("/users/all")
+                                        .hasAuthority(Roles.ADMIN.name())
+                )
+                .authorizeHttpRequests(
+                        mather->
+                                mather.anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(

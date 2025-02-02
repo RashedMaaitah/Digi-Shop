@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
         Role role = new Role();
         role.setUser(user);
         RoleId roleId = new RoleId();
-        roleId.setRoleName(Roles.ROLE_USER.name());
+        roleId.setRoleName(Roles.USER.name());
         roleId.setUserId(user.getId());
         role.setId(roleId);
 
