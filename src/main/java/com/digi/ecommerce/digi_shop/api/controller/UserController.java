@@ -27,7 +27,7 @@ public class UserController {
     private final UserMapper userMapper;
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping(USERS_BASE)
+    @GetMapping
     public ResponseEntity<ApiResponse<UserDTO>> getUsers() {
         List<UserDTO> users = userService.getAllUsers()
                 .stream()
