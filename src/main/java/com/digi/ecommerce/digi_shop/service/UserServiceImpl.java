@@ -1,8 +1,10 @@
 package com.digi.ecommerce.digi_shop.service;
 
-import com.digi.ecommerce.digi_shop.api.dto.response.AuthResponse;
+import com.digi.ecommerce.digi_shop.api.dto.request.ChangePasswordRequest;
+import com.digi.ecommerce.digi_shop.api.dto.response.UserAuthResponse;
 import com.digi.ecommerce.digi_shop.api.dto.request.CreateUserRequest;
 import com.digi.ecommerce.digi_shop.common.Roles;
+import com.digi.ecommerce.digi_shop.infra.exception.IncorrectPasswordException;
 import com.digi.ecommerce.digi_shop.infra.exception.RefreshTokenException;
 import com.digi.ecommerce.digi_shop.infra.exception.UserAlreadyExistsException;
 import com.digi.ecommerce.digi_shop.infra.mapper.UserMapper;
@@ -11,14 +13,18 @@ import com.digi.ecommerce.digi_shop.repository.entity.Role;
 import com.digi.ecommerce.digi_shop.repository.entity.RoleId;
 import com.digi.ecommerce.digi_shop.repository.entity.User;
 import com.digi.ecommerce.digi_shop.repository.repos.UserRepository;
+import com.digi.ecommerce.digi_shop.infra.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -28,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${app.security.jwt.refresh-expiration}")
     private Long refreshTokenExpiration;
@@ -64,15 +71,10 @@ public class UserServiceImpl implements UserService {
         userRepository.invalidateRefreshTokenByEmail(email);
     }
 
-    @Override
-    public User getUserWithEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
-    }
 
     @Override
-    public AuthResponse createUser(CreateUserRequest request) {
-        if (userRepository.findByEmailIgnoreCase(request.username()).isPresent()) {
+    public UserAuthResponse createUser(CreateUserRequest request) {
+        if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
             throw new UserAlreadyExistsException("User already exists");
         }
         User user = userRepository.save(userMapper.toUser(request));
@@ -90,6 +92,34 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        return userMapper.toUserResponse(user);
+        return userMapper.toUserAuthResponse(user);
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Transactional
+    @Override
+    public void updatePassword(Long id, ChangePasswordRequest changePasswordRequest) {
+        User user = unwrapUser(userRepository.findById(id), id);
+
+        if (!passwordEncoder.matches(changePasswordRequest.oldPassword(), user.getPasswordHash())) {
+            throw new IncorrectPasswordException("Incorrect password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(changePasswordRequest.newPassword()));
+        user.setUpdatedAt(Instant.now());
+        user.setRefreshToken(null);
+        user.setRefreshTokenExpiry(null);
+        userRepository.save(user);
+    }
+
+    private User unwrapUser(Optional<User> optionalUser, Long id) {
+        if (optionalUser.isPresent())
+            return optionalUser.get();
+        else
+            throw new EntityNotFoundException(id, User.class);
     }
 }

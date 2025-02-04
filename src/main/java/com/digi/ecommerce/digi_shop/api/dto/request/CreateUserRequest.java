@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record CreateUserRequest(@JsonProperty @NotBlank String firstName,
                                 @JsonProperty @NotBlank String lastName,
-                                @JsonProperty @NotBlank @Email String username,
+                                @JsonProperty @NotBlank @Email String email,
                                 @JsonProperty
                                 @NotBlank
                                 @Size(min = 8, max = 25, message = "Password minimum length is 8")

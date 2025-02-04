@@ -1,12 +1,12 @@
 package com.digi.ecommerce.digi_shop.infra.security;
 
-import com.digi.ecommerce.digi_shop.common.Roles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 import org.springframework.context.annotation.Bean;
@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -60,7 +61,7 @@ public class SecurityConfig {
         final var authWhitelist = new String[]{
                 "/api-docs/**", "/webjars/**", "/auth/refresh-token",
                 "/auth/signin", "/auth/signup", "/swagger-ui/**",
-                "/doc/**", "/", "/index.html", "/assets/**", "/error/**"};
+                "/doc/**", "/index.html", "/assets/**", "/error/**"};
 
         http.addFilterBefore(
                         jwtAuthenticationFilter,
@@ -71,13 +72,13 @@ public class SecurityConfig {
                                         .requestMatchers(authWhitelist)
                                         .permitAll()
                 )
+//                .authorizeHttpRequests(
+//                        matcher ->
+//                                matcher.requestMatchers("/users/all")
+//                                        .hasAuthority(Roles.ADMIN.name())
+//                )
                 .authorizeHttpRequests(
-                        matcher ->
-                                matcher.requestMatchers("/users/all")
-                                        .hasAuthority(Roles.ADMIN.name())
-                )
-                .authorizeHttpRequests(
-                        mather->
+                        mather ->
                                 mather.anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)

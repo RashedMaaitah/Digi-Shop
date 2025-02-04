@@ -1,8 +1,10 @@
 package com.digi.ecommerce.digi_shop.api.controller;
 
 import com.digi.ecommerce.digi_shop.api.dto.request.AuthRequest;
+import com.digi.ecommerce.digi_shop.api.dto.request.ChangePasswordRequest;
 import com.digi.ecommerce.digi_shop.api.dto.request.RefreshTokenRequest;
-import com.digi.ecommerce.digi_shop.api.dto.response.AuthResponse;
+import com.digi.ecommerce.digi_shop.api.dto.response.ApiResponse;
+import com.digi.ecommerce.digi_shop.api.dto.response.UserAuthResponse;
 import com.digi.ecommerce.digi_shop.api.dto.request.CreateUserRequest;
 import com.digi.ecommerce.digi_shop.api.dto.response.LogoutResponse;
 import com.digi.ecommerce.digi_shop.api.dto.response.RefreshTokenResponse;
@@ -30,16 +32,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URI;
-import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static com.digi.ecommerce.digi_shop.common.AuthConstants.BEARER_PREFIX;
+import static com.digi.ecommerce.digi_shop.common.PathConstants.*;
+import static org.springframework.http.HttpStatus.CREATED;
 
+/**
+ * Authentication controller used to handle users authentication.
+ *
+ * @author Rashed Al Maaitah
+ * @version 1.0
+ */
 @Tag(name = "Authentication",
         description = "Public APIs for managing users authentication and registration")
 @RestController
-@RequestMapping("auth")
+@RequestMapping(AUTH_BASE)
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -50,8 +59,8 @@ public class AuthController {
     @Operation(description = """
             Authenticate a user before accessing any protected resource
             returns a valid access token if it succeeded""")
-    @PostMapping("signin")
-    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody @Valid AuthRequest authRequest) {
+    @PostMapping(AUTH_SIGNIN)
+    public ResponseEntity<ApiResponse<UserAuthResponse>> authenticateUser(@RequestBody @Valid AuthRequest authRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password())
@@ -62,7 +71,7 @@ public class AuthController {
 
             User user = userService.updateRefreshToken(authentication.getName(), refreshToken);
 
-            var response = new AuthResponse(
+            var userResponse = new UserAuthResponse(
                     user.getId().toString(),
                     user.getFirstName(),
                     user.getLastName(),
@@ -75,7 +84,7 @@ public class AuthController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken)
-                    .body(response);
+                    .body(ApiResponse.success(List.of(userResponse), "Authentication successful", "/".concat(AUTH_SIGNIN)));
         } catch (BadCredentialsException ex) {
             throw new AuthenticationFailedException("Invalid username or password");
         }
@@ -90,20 +99,20 @@ public class AuthController {
                     and return the details of the created user, including a generated ID.
                     """
     )
-    @PostMapping("signup")
-    public ResponseEntity<AuthResponse> registerUser(@RequestBody @Valid CreateUserRequest request) {
-        AuthResponse authResponse = userService.createUser(request);
+    @PostMapping(AUTH_SIGNUP)
+    public ResponseEntity<ApiResponse<UserAuthResponse>> registerUser(@RequestBody @Valid CreateUserRequest request) {
+        UserAuthResponse userAuthResponse = userService.createUser(request);
 
-        return ResponseEntity.created(URI.create("/users/" + authResponse.id()))
-                .body(authResponse);
+        return ResponseEntity.status(CREATED)
+                .body(ApiResponse.success(List.of(userAuthResponse), "User registered successfully", "/".concat(AUTH_SIGNUP)));
     }
 
     @Operation(description = """
             An API call, to refresh user JWT token without signing again,
             to be able to continue be authenticated and use the system.
             """)
-    @PostMapping("refresh-token")
-    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+    @PostMapping(AUTH_REFRESH_TOKEN)
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
         String requestRefreshToken = request.refreshToken();
 
         User user = userService.validateRefreshToken(requestRefreshToken);
@@ -112,7 +121,11 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + newAccessToken)
-                .body(new RefreshTokenResponse(requestRefreshToken));
+                .body(ApiResponse.success(
+                        List.of(new RefreshTokenResponse(requestRefreshToken)),
+                        "Refresh token successfully validated.",
+                        "/".concat(AUTH_REFRESH_TOKEN)
+                ));
     }
 
     @Operation(description = """
@@ -120,17 +133,43 @@ public class AuthController {
             But has to re-authenticate again to access the system.
             """,
             security = {@SecurityRequirement(name = "bearer-key")})
-    @PostMapping("signout")
-    public ResponseEntity<LogoutResponse> logoutUser() {
+    @PostMapping(AUTH_SIGNOUT)
+    public ResponseEntity<ApiResponse<LogoutResponse>> logoutUser() {
         return getUserFromSecurityContext()
                 .map(user -> {
                     userService.invalidateRefreshTokenByEmail(user.getUsername());
                     SecurityContextHolder.getContext().setAuthentication(null);
 
-                    LogoutResponse response = new LogoutResponse(true, "You have been successfully logged out.", Instant.now());
-                    return ResponseEntity.ok(response);
+                    ApiResponse<LogoutResponse> apiResponse = ApiResponse.success(
+                            List.of(),
+                            "You have been successfully logged out.",
+                            "/".concat(AUTH_SIGNOUT)
+                    );
+                    return ResponseEntity.ok(apiResponse);
                 })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated. Please sign in."));
+    }
+
+    @Operation(description = """
+            An API call, to change the user password,
+            the user has to signin again to gain a valid access token back.
+            """,
+            security = {@SecurityRequirement(name = "bearer-key")})
+    @PostMapping(AUTH_CHANGE_PASSWORD)
+    public ResponseEntity<ApiResponse<String>> changePassword(
+            @RequestBody @Valid ChangePasswordRequest changePasswordRequest) {
+        Optional<UserDetailsDTO> userDetails = getUserFromSecurityContext();
+        if (userDetails.isEmpty())
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated. Please sign in.");
+
+        userService.updatePassword(userDetails.get().getId(), changePasswordRequest);
+        SecurityContextHolder.getContext().setAuthentication(null);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        List.of(),
+                        "Password Changed Successfully, Login again",
+                        "/".concat(AUTH_CHANGE_PASSWORD)));
     }
 
     private Optional<UserDetailsDTO> getUserFromSecurityContext() {

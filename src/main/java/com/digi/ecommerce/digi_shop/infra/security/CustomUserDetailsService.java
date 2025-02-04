@@ -32,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .findByEmail(email)
                 .orElseThrow((() -> new UsernameNotFoundException("Email Not found")));
 
-        return new UserDetailsDTO(user.getEmail(), user.getPasswordHash(), mapRolesToAuthorities(user.getRoles()));
+        return new UserDetailsDTO(user.getId(), user.getEmail(), user.getPasswordHash(), mapRolesToAuthorities(user.getRoles()));
     }
 
     /**
