@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static com.digi.ecommerce.digi_shop.common.PathConstants.USERS_ALL;
 import static com.digi.ecommerce.digi_shop.common.PathConstants.USERS_BASE;
 
 @Tag(name = "Users",
@@ -28,7 +27,7 @@ public class UserController {
     private final UserMapper userMapper;
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping(USERS_ALL)
+    @GetMapping(USERS_BASE)
     public ResponseEntity<ApiResponse<UserDTO>> getUsers() {
         List<UserDTO> users = userService.getAllUsers()
                 .stream()
@@ -36,7 +35,7 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.
-                ok(ApiResponse.success(users, "Fetched all users successfully", "/".concat(USERS_ALL)));
+                ok(ApiResponse.success(users, "Fetched all users successfully", "/".concat(USERS_BASE)));
     }
 
 
