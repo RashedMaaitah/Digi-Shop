@@ -16,8 +16,9 @@ public final class PathConstants {
     public static final String AUTH_CHANGE_PASSWORD = "change-password";
 
     public static final String USERS_BASE = "users";
-    public static final String USERS_ALL = "all";
 
+    public static final String PRODUCTS_BASE = "products";
+    public static final String PRODUCTS_ID = "products/{id}";
 
     private PathConstants() {
     }

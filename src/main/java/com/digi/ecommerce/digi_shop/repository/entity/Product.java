@@ -6,8 +6,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +13,7 @@ import java.time.Instant;
 /**
  * This class represents the Product domain model as a JPA Entity
  *
- * @author  Rashed Al Maaitah
+ * @author Rashed Al Maaitah
  * @version 1.0
  */
 @Getter
@@ -31,7 +29,7 @@ public class Product {
 
     @Size(max = 100)
     @NotNull
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", unique = true, nullable = false, length = 100)
     private String name;
 
     @Lob
@@ -46,8 +44,8 @@ public class Product {
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -55,4 +53,7 @@ public class Product {
     @Column(name = "created_at")
     private Instant createdAt;
 
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 }
