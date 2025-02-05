@@ -4,9 +4,9 @@ import com.digi.ecommerce.digi_shop.api.dto.request.ChangePasswordRequest;
 import com.digi.ecommerce.digi_shop.api.dto.response.UserAuthResponse;
 import com.digi.ecommerce.digi_shop.api.dto.request.CreateUserRequest;
 import com.digi.ecommerce.digi_shop.common.Roles;
+import com.digi.ecommerce.digi_shop.infra.exception.EntityAlreadyExistsException;
 import com.digi.ecommerce.digi_shop.infra.exception.IncorrectPasswordException;
 import com.digi.ecommerce.digi_shop.infra.exception.RefreshTokenException;
-import com.digi.ecommerce.digi_shop.infra.exception.UserAlreadyExistsException;
 import com.digi.ecommerce.digi_shop.infra.mapper.UserMapper;
 import com.digi.ecommerce.digi_shop.infra.security.jwt.JwtService;
 import com.digi.ecommerce.digi_shop.repository.entity.Role;
@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserAuthResponse createUser(CreateUserRequest request) {
         if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
-            throw new UserAlreadyExistsException("User already exists");
+            throw new EntityAlreadyExistsException("email", request.email(), User.class);
         }
         User user = userRepository.save(userMapper.toUser(request));
 

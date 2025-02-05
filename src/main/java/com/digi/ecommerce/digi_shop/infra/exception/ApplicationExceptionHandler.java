@@ -2,9 +2,12 @@ package com.digi.ecommerce.digi_shop.infra.exception;
 
 import com.digi.ecommerce.digi_shop.api.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,17 +17,19 @@ import static org.springframework.http.HttpStatus.*;
 
 @Log4j2
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class ApplicationExceptionHandler {
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<String>> handleUserAlreadyExistsException(
-            HttpServletRequest request,
-            UserAlreadyExistsException ex) {
-        log.error("User already exists exception {} {} \n", request.getRequestURI(), ex);
+    private final HttpServletRequest request;
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handleEntityAlreadyExistsException(
+            EntityAlreadyExistsException ex) {
+        log.error("Entity already exists exception {} {} \n", request.getRequestURI(), ex);
 
         return ResponseEntity.status(CONFLICT)
                 .body(
-                        ApiResponse.error("User already exists",
+                        ApiResponse.error("Entity already exists",
                                 List.of(ex.getMessage()),
                                 CONFLICT.value(), request.getRequestURI())
                 );
@@ -32,7 +37,6 @@ public class ApplicationExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<String>> handleResourceNotFoundException(
-            HttpServletRequest request,
             RuntimeException ex) {
         log.error("Resource not found {} \n", request.getRequestURI(), ex);
 
@@ -45,7 +49,6 @@ public class ApplicationExceptionHandler {
 
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ApiResponse<String>> handleAuthenticationException(
-            HttpServletRequest request,
             AuthenticationFailedException ex) {
         log.error("Authentication failed: {} \n", request.getRequestURI(), ex);
 
@@ -59,7 +62,6 @@ public class ApplicationExceptionHandler {
 
     @ExceptionHandler(RefreshTokenException.class)
     public ResponseEntity<ApiResponse<String>> handleRefreshTokenException(
-            HttpServletRequest request,
             RefreshTokenException ex) {
         log.error("Refresh Token exception: {} \n", request.getRequestURI(), ex);
 
@@ -73,7 +75,6 @@ public class ApplicationExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<String>> handleAccessDeniedException(
-            HttpServletRequest request,
             AccessDeniedException ex) {
         log.error("Access denied error: {} \n", request.getRequestURI(), ex);
 
@@ -87,7 +88,6 @@ public class ApplicationExceptionHandler {
 
     @ExceptionHandler(IncorrectPasswordException.class)
     public ResponseEntity<ApiResponse<String>> handleIncorrectPasswordException(
-            HttpServletRequest request,
             IncorrectPasswordException ex
     ) {
         log.error("Incorrect password error: {} \n", request.getRequestURI(), ex);
@@ -100,9 +100,25 @@ public class ApplicationExceptionHandler {
                                 FORBIDDEN.value(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<String>> handleValidationErrors(
+            MethodArgumentNotValidException ex) {
+        log.error("Validation error: {} \n", request.getRequestURI(), ex);
+
+        List<String> errors = ex.getBindingResult().getFieldErrors()
+                .stream().map(FieldError::getDefaultMessage).toList();
+
+        return ResponseEntity
+                .status(BAD_REQUEST)
+                .body(
+                        ApiResponse.error("Validation errors occurred",
+                                errors,
+                                BAD_REQUEST.value(), request.getRequestURI()));
+    }
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGeneralException(
-            HttpServletRequest request,
             Exception ex) {
         log.error("Unexpected error: {} \n", request.getRequestURI(), ex);
 
