@@ -5,6 +5,7 @@ import com.digi.ecommerce.digi_shop.api.dto.response.UserDTO;
 import com.digi.ecommerce.digi_shop.infra.mapper.UserMapper;
 import com.digi.ecommerce.digi_shop.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ import static com.digi.ecommerce.digi_shop.common.PathConstants.USERS_BASE;
 public class UserController {
 
     private final UserService userService;
+    private final HttpServletRequest httpServletRequest;
     private final UserMapper userMapper;
 
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -35,7 +37,7 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.
-                ok(ApiResponse.success(users, "Fetched all users successfully", "/".concat(USERS_BASE)));
+                ok(ApiResponse.success(users, "Fetched all users successfully", httpServletRequest.getRequestURI()));
     }
 
 

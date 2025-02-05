@@ -16,6 +16,7 @@ import com.digi.ecommerce.digi_shop.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -53,6 +54,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final HttpServletRequest httpServletRequest;
     private final JwtService jwtService;
     private final UserService userService;
 
@@ -84,7 +86,10 @@ public class AuthController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken)
-                    .body(ApiResponse.success(List.of(userResponse), "Authentication successful", "/".concat(AUTH_SIGNIN)));
+                    .body(ApiResponse
+                            .success(List.of(userResponse),
+                                    "Authentication successful",
+                                    httpServletRequest.getRequestURI()));
         } catch (BadCredentialsException ex) {
             throw new AuthenticationFailedException("Invalid username or password");
         }
@@ -104,7 +109,10 @@ public class AuthController {
         UserAuthResponse userAuthResponse = userService.createUser(request);
 
         return ResponseEntity.status(CREATED)
-                .body(ApiResponse.success(List.of(userAuthResponse), "User registered successfully", "/".concat(AUTH_SIGNUP)));
+                .body(ApiResponse.
+                        success(List.of(userAuthResponse),
+                                "User registered successfully",
+                                httpServletRequest.getRequestURI()));
     }
 
     @Operation(description = """
@@ -124,7 +132,7 @@ public class AuthController {
                 .body(ApiResponse.success(
                         List.of(new RefreshTokenResponse(requestRefreshToken)),
                         "Refresh token successfully validated.",
-                        "/".concat(AUTH_REFRESH_TOKEN)
+                        httpServletRequest.getRequestURI()
                 ));
     }
 
@@ -143,7 +151,7 @@ public class AuthController {
                     ApiResponse<LogoutResponse> apiResponse = ApiResponse.success(
                             List.of(),
                             "You have been successfully logged out.",
-                            "/".concat(AUTH_SIGNOUT)
+                            httpServletRequest.getRequestURI()
                     );
                     return ResponseEntity.ok(apiResponse);
                 })
@@ -169,7 +177,7 @@ public class AuthController {
                 ApiResponse.success(
                         List.of(),
                         "Password Changed Successfully, Login again",
-                        "/".concat(AUTH_CHANGE_PASSWORD)));
+                        httpServletRequest.getRequestURI()));
     }
 
     private Optional<UserDetailsDTO> getUserFromSecurityContext() {
