@@ -1,7 +1,10 @@
 package com.digi.ecommerce.digi_shop.infra.security;
 
+import com.digi.ecommerce.digi_shop.common.Roles;
+import com.digi.ecommerce.digi_shop.infra.security.exception.handler.ApplicationAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -16,7 +19,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -29,7 +31,7 @@ public class SecurityConfig {
 
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
 
-    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final ApplicationAuthenticationEntryPoint authenticationEntryPoint;
     private final AccessDeniedHandler accessDeniedHandler;
 
 
@@ -59,11 +61,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         final var authWhitelist = new String[]{
-                "/api-docs/**", "/webjars/**", "/auth/refresh-token",
+                "/api-docs/**", "/auth/refresh-token",
                 "/auth/signin", "/auth/signup", "/swagger-ui/**",
-                "/doc/**", "/index.html", "/assets/**", "/error/**"};
+                "/doc/**", "/index.html", "/error/**"};
 
-        http.addFilterBefore(
+
+        http.
+                csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(
+                        configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(
+                        customizer ->
+                                customizer
+                                        .accessDeniedHandler(accessDeniedHandler)
+                                        .authenticationEntryPoint(authenticationEntryPoint))
+                .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(
@@ -72,23 +84,17 @@ public class SecurityConfig {
                                         .requestMatchers(authWhitelist)
                                         .permitAll()
                 )
-//                .authorizeHttpRequests(
-//                        matcher ->
-//                                matcher.requestMatchers("/users/all")
-//                                        .hasAuthority(Roles.ADMIN.name())
-//                )
+                .authorizeHttpRequests(
+                        matcher ->
+                                matcher.requestMatchers("/users/all").hasAuthority(Roles.ADMIN.name())
+                                        .requestMatchers(HttpMethod.POST, "/products").hasAuthority(Roles.ADMIN.name())
+                                        .requestMatchers(HttpMethod.PATCH, "/products").hasAuthority(Roles.ADMIN.name())
+                                        .requestMatchers(HttpMethod.DELETE, "/products").hasAuthority(Roles.ADMIN.name())
+                )
                 .authorizeHttpRequests(
                         mather ->
                                 mather.anyRequest().authenticated()
-                )
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(
-                        configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(
-                        customizer ->
-                                customizer
-                                        .accessDeniedHandler(accessDeniedHandler)
-                                        .authenticationEntryPoint(authenticationEntryPoint));
+                );
 
         return http.build();
     }
