@@ -48,7 +48,7 @@ public class ApplicationAuthenticationEntryPoint implements AuthenticationEntryP
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", "Unauthorized");
         body.put("message", authException.getMessage());
-        body.put("path", request.getServletPath());
+        body.put("path", request.getRequestURI());
 
         objectMapper.writeValue(response.getOutputStream(), body);
     }
