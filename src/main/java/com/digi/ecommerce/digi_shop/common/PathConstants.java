@@ -18,7 +18,17 @@ public final class PathConstants {
     public static final String USERS_BASE = "users";
 
     public static final String PRODUCTS_BASE = "products";
-    public static final String PRODUCTS_ID = "products/{id}";
+    public static final String PRODUCTS_ID = "{id}";
+
+    public static final String CART_BASE = "cart";
+    public static final String CART_ITEM_ID = "{cartItemId}";
+    public static final String CART_ID = "{id}";
+
+    public static final String ORDER_BASE = "orders";
+    public static final String ORDER_ID = "{orderId}";
+    public static final String ORDER_USER_ID = "user/{userId}";
+    public static final String ORDER_ID_STATUS = "{orderId}/status";
+
 
     private PathConstants() {
     }

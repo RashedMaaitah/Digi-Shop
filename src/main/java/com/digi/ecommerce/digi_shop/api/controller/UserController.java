@@ -1,5 +1,7 @@
 package com.digi.ecommerce.digi_shop.api.controller;
 
+import com.digi.ecommerce.digi_shop.api.dto.request.PageDTO;
+import com.digi.ecommerce.digi_shop.api.dto.request.UserSearchCriteria;
 import com.digi.ecommerce.digi_shop.api.dto.response.ApiResponse;
 import com.digi.ecommerce.digi_shop.api.dto.response.UserDTO;
 import com.digi.ecommerce.digi_shop.infra.mapper.UserMapper;
@@ -7,11 +9,10 @@ import com.digi.ecommerce.digi_shop.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,17 +31,17 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
-    public ResponseEntity<ApiResponse<UserDTO>> getUsers() {
-        List<UserDTO> users = userService.getAllUsers()
-                .stream()
-                .map(userMapper::toUserDTO)
-                .toList();
+    public ResponseEntity<ApiResponse<Page<UserDTO>>> getUsers(
+            PageDTO pageDTO,
+            UserSearchCriteria userSearchCriteria) {
+
+        Page<UserDTO> userDTOPage = userService.getUsers(pageDTO, userSearchCriteria)
+                .map(userMapper::toUserDTO);
 
         return ResponseEntity.
-                ok(ApiResponse.success(users, "Fetched all users successfully", httpServletRequest.getRequestURI()));
+                ok(ApiResponse.success(List.of(userDTOPage),
+                        "Fetched all users successfully", httpServletRequest.getRequestURI()));
     }
-
-
 
 
 }

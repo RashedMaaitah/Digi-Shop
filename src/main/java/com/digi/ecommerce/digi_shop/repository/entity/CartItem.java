@@ -20,7 +20,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "cart_items")
-public class CartItems {
+public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)

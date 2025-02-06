@@ -3,7 +3,7 @@ package com.digi.ecommerce.digi_shop.infra.security;
 import com.digi.ecommerce.digi_shop.infra.security.dto.UserDetailsDTO;
 import com.digi.ecommerce.digi_shop.repository.entity.Role;
 import com.digi.ecommerce.digi_shop.repository.entity.User;
-import com.digi.ecommerce.digi_shop.repository.repos.UserRepository;
+import com.digi.ecommerce.digi_shop.repository.repos.user.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;

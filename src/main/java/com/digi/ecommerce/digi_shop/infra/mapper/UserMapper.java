@@ -8,8 +8,10 @@ import com.digi.ecommerce.digi_shop.repository.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Set;
 
 @Mapper(componentModel = "spring")
@@ -29,10 +31,13 @@ public abstract class UserMapper {
 
     public abstract UserDTO toUserDTO(User user);
 
+    public abstract List<UserDTO> toUserDTOs(Page<User> users);
+
     protected String[] map(Set<Role> roles) {
         return roles
                 .stream()
                 .map(role -> role.getId().getRoleName())
                 .toArray(String[]::new);
     }
+
 }

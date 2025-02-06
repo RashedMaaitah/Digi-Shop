@@ -9,6 +9,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * This class represents the Product domain model as a JPA Entity
@@ -45,7 +46,7 @@ public class Product {
     private Integer stockQuantity;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -56,4 +57,26 @@ public class Product {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Objects.equals(id, product.id) &&
+               Objects.equals(name, product.name) &&
+               Objects.equals(price, product.price) &&
+               Objects.equals(stockQuantity, product.stockQuantity) &&
+               ((category == null && product.category == null) ||
+                (category != null && product.category != null &&
+                 Objects.equals(category.getId(), product.category.getId()) &&
+                 Objects.equals(category.getName(), product.category.getName())));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, price, stockQuantity,
+                category != null ? category.getId() : null,
+                category != null ? category.getName() : null);
+    }
 }

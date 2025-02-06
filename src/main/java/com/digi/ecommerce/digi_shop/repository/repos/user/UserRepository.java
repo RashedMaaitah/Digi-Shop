@@ -1,4 +1,4 @@
-package com.digi.ecommerce.digi_shop.repository.repos;
+package com.digi.ecommerce.digi_shop.repository.repos.user;
 
 import com.digi.ecommerce.digi_shop.repository.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

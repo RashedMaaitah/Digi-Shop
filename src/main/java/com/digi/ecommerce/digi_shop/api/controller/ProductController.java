@@ -1,9 +1,12 @@
 package com.digi.ecommerce.digi_shop.api.controller;
 
 import com.digi.ecommerce.digi_shop.api.dto.request.CreateProductRequest;
+import com.digi.ecommerce.digi_shop.api.dto.request.PageDTO;
+import com.digi.ecommerce.digi_shop.api.dto.request.ProductSearchCriteria;
 import com.digi.ecommerce.digi_shop.api.dto.request.UpdateProductRequest;
 import com.digi.ecommerce.digi_shop.api.dto.response.ApiResponse;
 import com.digi.ecommerce.digi_shop.api.dto.response.ProductDTO;
+import com.digi.ecommerce.digi_shop.infra.mapper.ProductMapper;
 import com.digi.ecommerce.digi_shop.repository.entity.Product;
 import com.digi.ecommerce.digi_shop.service.ProductService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +31,17 @@ public class ProductController {
 
     private final ProductService productService;
     private final HttpServletRequest httpServletRequest;
+    private final ProductMapper productMapper;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> getAllProducts() {
-        // TODO Fetch all Products and Map them to Product DTO
-//        productService.getAllProducts();
+    public ResponseEntity<ApiResponse<Page<ProductDTO>>> getAllProducts(
+            PageDTO pageDTO,
+            ProductSearchCriteria productSearchCriteria) {
+        Page<ProductDTO> productDTOPage =
+                productService.getProducts(pageDTO, productSearchCriteria)
+                        .map(productMapper::toProductDTO);
         return ResponseEntity.ok(
-                ApiResponse.success(List.of(),
+                ApiResponse.success(List.of(productDTOPage),
                         "Fetched all products",
                         httpServletRequest.getRequestURI()));
     }
@@ -53,11 +61,11 @@ public class ProductController {
 
     @PatchMapping(PRODUCTS_ID)
     public ResponseEntity<ApiResponse<String>> updateProduct(
-            @PathVariable
+            @PathVariable("id")
             @Min(1) @Max(Long.MAX_VALUE)
             Long id,
             @RequestBody @Valid UpdateProductRequest updateProductRequest) {
-        // TODO make sure the id is for an existing product if so update the sent fields only
+        productService.updateProduct(id, updateProductRequest);
         return ResponseEntity.ok(
                 ApiResponse.success(List.of(),
                         "Product Updated Successfully",
@@ -65,15 +73,12 @@ public class ProductController {
     }
 
     @DeleteMapping(PRODUCTS_ID)
-    public ResponseEntity<ApiResponse<String>> deleteProduct(
+    public ResponseEntity<Void> deleteProduct(
             @PathVariable
             @Min(1) @Max(Long.MAX_VALUE)
             Long id) {
 
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .body(ApiResponse.success(List.of(),
-                        "Product Updated Successfully",
-                        httpServletRequest.getRequestURI()));
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
     }
 }

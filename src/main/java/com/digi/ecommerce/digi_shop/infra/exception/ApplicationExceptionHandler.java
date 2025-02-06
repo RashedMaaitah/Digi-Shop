@@ -2,16 +2,21 @@ package com.digi.ecommerce.digi_shop.infra.exception;
 
 import com.digi.ecommerce.digi_shop.api.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -101,12 +106,14 @@ public class ApplicationExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<String>> handleValidationErrors(
+    public ResponseEntity<ApiResponse<String>> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex) {
-        log.error("Validation error: {} \n", request.getRequestURI(), ex);
+        log.error("Method Argument Not Valid Exception: {} \n", request.getRequestURI(), ex);
 
         List<String> errors = ex.getBindingResult().getFieldErrors()
-                .stream().map(FieldError::getDefaultMessage).toList();
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.toList());
 
         return ResponseEntity
                 .status(BAD_REQUEST)
@@ -116,6 +123,28 @@ public class ApplicationExceptionHandler {
                                 BAD_REQUEST.value(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<String>> handleConstraintViolation(ConstraintViolationException ex) {
+        List<String> errors = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toList());
+        log.error("ConstraintViolationException: {}", ex.getMessage(), ex);
+
+        return ResponseEntity.status(BAD_REQUEST)
+                .body(ApiResponse.error("Validation failed", errors, BAD_REQUEST.value(), "Your request URL"));
+    }
+
+    @ExceptionHandler(EmptyCartException.class)
+    public ResponseEntity<ApiResponse<String>> handleEmptyCartException(EmptyCartException ex) {
+        log.error("Empty Cart Exception: {} \n", request.getRequestURI(), ex);
+
+        return ResponseEntity
+                .status(BAD_REQUEST)
+                .body(
+                        ApiResponse.error("Empty Cart Exception",
+                                List.of(ex.getMessage()),
+                                BAD_REQUEST.value(), request.getRequestURI()));
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGeneralException(

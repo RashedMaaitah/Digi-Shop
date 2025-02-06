@@ -9,11 +9,12 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * This class represents the Order domain model as a JPA Entity
  *
- * @author  Rashed Al Maaitah
+ * @author Rashed Al Maaitah
  * @version 1.0
  */
 @Getter
@@ -31,6 +32,9 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItems;
 
     @NotNull
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)

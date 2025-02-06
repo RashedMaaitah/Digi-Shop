@@ -1,6 +1,8 @@
 package com.digi.ecommerce.digi_shop.service;
 
 import com.digi.ecommerce.digi_shop.api.dto.request.ChangePasswordRequest;
+import com.digi.ecommerce.digi_shop.api.dto.request.PageDTO;
+import com.digi.ecommerce.digi_shop.api.dto.request.UserSearchCriteria;
 import com.digi.ecommerce.digi_shop.api.dto.response.UserAuthResponse;
 import com.digi.ecommerce.digi_shop.api.dto.request.CreateUserRequest;
 import com.digi.ecommerce.digi_shop.common.Roles;
@@ -12,10 +14,12 @@ import com.digi.ecommerce.digi_shop.infra.security.jwt.JwtService;
 import com.digi.ecommerce.digi_shop.repository.entity.Role;
 import com.digi.ecommerce.digi_shop.repository.entity.RoleId;
 import com.digi.ecommerce.digi_shop.repository.entity.User;
-import com.digi.ecommerce.digi_shop.repository.repos.UserRepository;
+import com.digi.ecommerce.digi_shop.repository.repos.user.UserCriteriaRepository;
+import com.digi.ecommerce.digi_shop.repository.repos.user.UserRepository;
 import com.digi.ecommerce.digi_shop.infra.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,10 +39,12 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final UserCriteriaRepository userCriteriaRepository;
 
     @Value("${app.security.jwt.refresh-expiration}")
     private Long refreshTokenExpiration;
 
+    @Transactional
     @Override
     public User updateRefreshToken(String email, String refreshToken) {
         User user = userRepository.findByEmail(email)
@@ -50,6 +56,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     @Override
     public User validateRefreshToken(String refreshToken) {
         User user = userRepository.findByRefreshToken(refreshToken)
@@ -72,6 +79,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    @Transactional
     @Override
     public UserAuthResponse createUser(CreateUserRequest request) {
         if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
@@ -98,6 +106,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public Page<User> getUsers(PageDTO pageDTO, UserSearchCriteria userSearchCriteria) {
+        return userCriteriaRepository.findAllWithFilters(pageDTO, userSearchCriteria);
     }
 
     @Transactional
