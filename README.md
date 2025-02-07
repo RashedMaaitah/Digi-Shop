@@ -1,7 +1,7 @@
 # DigiCommerce
 
 ## Overview
-DigiCommerce is a modern e-commerce platform built with Spring Boot and React, designed to provide a seamless online shopping experience. It supports product management, user authentication, and secure payments.
+DigiCommerce is a modern e-commerce platform built with Spring Boot and React, designed to provide a seamless online shopping experience. It supports product management, user authentication.
 
 ## Features
 - User authentication (JWT-based login/logout)
