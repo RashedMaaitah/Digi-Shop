@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP;
 
-@Slf4j
+
 @Configuration
 public class SwaggerConfig {
 
